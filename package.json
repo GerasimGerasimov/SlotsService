@@ -4,8 +4,8 @@
   "description": "сервис связи с внешними девайсами",
   "main": "index.ts",
   "scripts": {
-    "build":"tsc",
-    "dev":"set APP_DEBUG=true & node dist",
+    "build": "tsc",
+    "dev": "set APP_DEBUG=true & node dist",
     "test": "test",
     "start": "set APP_DEBUG=false & node dist"
   },
@@ -25,5 +25,9 @@
     "@types/express-session": "^1.15.13",
     "@types/nedb": "^1.8.8",
     "@types/node": "^12.7.1"
+  },
+  "dependencies": {
+    "@types/serialport": "^7.0.4",
+    "serialport": "^8.0.5"
   }
 }
