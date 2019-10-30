@@ -5,6 +5,7 @@ export default abstract class NetPorts  {
     abstract onClose():void;
     abstract onError(err: any):void;
     abstract onDataRead(data: any, err: any):void;
+    abstract write (msg: any): boolean;
     abstract get isOpen():boolean;//открыт порт?
     // abstract read():Promise<string>;
     // abstract write(msg:string):Promise<boolean>;

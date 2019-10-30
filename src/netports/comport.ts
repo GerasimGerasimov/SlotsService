@@ -33,8 +33,14 @@ export default class ComPort extends NetPorts {
 
     public onOpen():void {
         console.log('TSerialPort.Serial port is opened');
-        this.Port.write(Buffer.from(this.baMsg));
         this.isopen = true;//порт открыт можно работать
+        this.write (this.baMsg);
+    }
+
+    public write (msg: any): boolean {
+        const result = this.Port.write(Buffer.from(msg));
+        this.Port.drain();
+        return result;
     }
 
     public onClose():void {

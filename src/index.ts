@@ -1,5 +1,6 @@
 import NetPorts from "./netports/netports";
 import ComPort from "./netports/comport"
+import LinkManager from "./linkmanager/linkmanager";
 
 const settings = {
     port:'COM3',//название порта
@@ -13,16 +14,4 @@ const settings = {
     }
 
 let COMx: NetPorts = new ComPort(settings);
-
-/*
-class Greeting {
- 
-    private greet: string = 'hello!';
- 
-    constructor() {
-        console.log("Say " + this.greet);
-    }
-}
- 
-let myGreeting = new Greeting();
-*/
+let lm: LinkManager = new LinkManager();
