@@ -27,6 +27,10 @@ export default class ComPort extends NetPorts {
             this.Port.on('data',  this.onDataRead.bind(self));
     }
 
+    public setOnRead (onRead: Function, owner: any): void {
+        this.Port.on('data',  onRead.bind(owner));
+    }
+
     public onDataRead(data: any, err: any):void {
         console.log(`onDataRead:> ${data} error:> ${err}`);
     }

@@ -43,12 +43,46 @@ class Slot implements ISlot {
 }
 
 export default class LinkManager {
-    private slots: Array<ISlot> = []; //массив слотов 
-    constructor(){
+    private port: NetPorts;//коммуникационный порт привязанный к TLnkManager
+    private slots: Array<ISlot> = []; // массив слотов 
+    private index: number = 0; // номер активного слота
+    private timerOutID = null;//ID таймера отсчёта TimeOut
+    private timerOpenPortID = null;//ожидание открытия порта
+    private self: LinkManager = this;
+
+    constructor(port: NetPorts){
+        this.port = port;
         let s = new Slot();
         this.slots.push(s);
+        //установка обработчика события поступления данных в порт
+        this.port.setOnRead (this.onRead, self);
     }
-    private onReadMessage(){
+
+    //добавить слот
+    public addSlot (data, callback){
+        console.log('TLnkManager.addSlot');
+        const slot = new Slot(data, callback);//создаю новый слот
+        this.slots.push(slot);//добавляю его в массив слотов
+    }
+
+    public start (): void {
+        console.log('TLnkManager.start');
+        this.chekPortOpen();
+    }
+
+    //запускает Линк Манагер в автоматическую работу
+    private chekPortOpen (): void {
+        (this.port.isOpen)
+        ? this.run('PortOpen')
+        : this.timerOpenPortID= setTimeout (this.chekPortOpen.bind(self),1000);
+    }
+
+
+    private run(msg: string): void {
+
+    }
+
+    private onRead(){
 
     }
 }
