@@ -27,7 +27,9 @@
     "@types/node": "^12.7.1"
   },
   "dependencies": {
+    "@types/node-fetch": "^2.5.2",
     "@types/serialport": "^7.0.4",
+    "node-fetch": "^2.6.0",
     "serialport": "^8.0.5"
   }
 }

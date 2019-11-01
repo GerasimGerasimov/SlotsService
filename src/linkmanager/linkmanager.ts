@@ -1,65 +1,17 @@
-import NetPorts from "../netports/netports";
-
-interface ISlot {
-    State: {
-        ErrPort: boolean,   // ошибка последовательного порта (например, он закрыт)
-        ErrTimeOut: boolean,// ответ устройства не получен
-        ErrCRC: boolean     // ответ есть но неправильная контрольная сумма    
-    },
-    Settings: {
-        TimeOut: Number,         // время ожидания ответа в милисекундах
-        BeforeWriteTime: Number, // задержка перед отправкой следующего запроса
-    },
-    Flow: {
-        Skip: boolean,      // true - пропустить слот (и перейти к следующему)
-        NoRespond: boolean, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)
-        Change: boolean     // true - перейти к следующему слоту
-    },
-    name: string;    // имя слота для идентификации
-    out: Array<any>; // массив с данными (командой) для передачи в устройство
-    in: Array<any>;  // массив с данными полученными от устройства
-    onRead?: (...args: any[]) => void // callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
-}
-
-class Slot implements ISlot {
-    State = {
-        ErrPort: false,   // ошибка последовательного порта (например, он закрыт)
-        ErrTimeOut: false,// ответ устройства не получен
-        ErrCRC: false     // ошибка контрольной суммы    
-    };
-    Settings = {
-        TimeOut: 200,         // время ожидания ответа в милисекундах
-        BeforeWriteTime: 2, // задержка перед отправкой следующего запроса
-    };
-    Flow = {
-        Skip: false,      // true - пропустить слот (и перейти к следующему)
-        NoRespond: false, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)
-        Change: false,    // true - перейти к следующему слоту
-    };
-    name:string = '';    // имя слота для идентификации
-    out = []; // массив с данными (командой) для передачи в устройство
-    in = [];  // массив с данными полученными от устройства
-    onRead = null// callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
-
-    constructor (data: any, callback: Function) {
-        this.out = data;
-        this.onRead = callback;
-    }
-}
+import {ISlot, Slot} from './slots'
+const fetch = require('node-fetch');
 
 export default class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Array<ISlot> = []; // массив слотов 
     private index: number = 0; // номер активного слота
     private self: LinkManager = this;
+    private UpdateTimerID:any = null;
 
     constructor(host: string){
         this.host = host;
-        //let s = new Slot();
-        //this.slots.push(s);
         this.addSlot([1, 17, 192, 44], this.onRead);
-        //установка обработчика события поступления данных в порт
-        //this.port.setOnRead (this.onRead, this.self);
+        this.start();
     }
 
     //добавить слот
@@ -67,12 +19,12 @@ export default class LinkManager {
         console.log('TLnkManager.addSlot');
         const slot = new Slot(data, callback);//создаю новый слот
         this.slots.push(slot);//добавляю его в массив слотов
-        //this.port.setOnRead (callback, this.self);
     }
 
-    public start (): void {
+    public async start () {
         console.log('TLnkManager.start');
         this.chekPortOpen();
+        await this.run('');
     }
 
     //запускает Линк Манагер в автоматическую работу
@@ -84,9 +36,49 @@ export default class LinkManager {
         */
     }
 
+    private handledResponse = (response: any) => {
+        console.log(response);
+        /*
+        switch (response.status) {
+            case 400: throw new CustomFetchError ('Bad request'   , response.status)
+            case 404: throw new CustomFetchError ('Url not found' , response.status)        
+            case 401: throw new CustomFetchError (response.message, response.status)                        
+        }
+        */
+        return response.json()
+    }
 
-    private run(msg: string): void {
+    private validationJSON = (data: any) => {
+        console.log('AddGroup:data:',data)
+        return data
+    }
 
+    private startUpdateTimer =() => {
+        this.UpdateTimerID = setTimeout(()=>{}, 1000);
+    }
+
+    private async run(msg: string) {
+        try {
+            //console.log('MainPageImagesController:getImages:', url, username, token);
+            const header: any = {
+                method: 'PUT',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8',
+                },
+                body : JSON.stringify({
+                    "cmd": [1, 17, 192, 44],
+                    "timeOut":300,
+                    "wait": true
+                })
+            }
+            return await fetch(this.host, header)
+                .then (this.handledResponse)
+                .then (this.validationJSON);
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     private onRead(){

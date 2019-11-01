@@ -1,5 +1,4 @@
-import NetPorts from "./netports/netports";
 import LinkManager from "./linkmanager/linkmanager";
 
-
-let lm: LinkManager = new LinkManager(COMx);
+const host: string = 'http://localhost:5000/v1/data/'
+let lm: LinkManager = new LinkManager(host);
