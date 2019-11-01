@@ -40,22 +40,26 @@ class Slot implements ISlot {
     out = []; // массив с данными (командой) для передачи в устройство
     in = [];  // массив с данными полученными от устройства
     onRead = null// callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
+
+    constructor (data: any, callback: Function) {
+        this.out = data;
+        this.onRead = callback;
+    }
 }
 
 export default class LinkManager {
-    private port: NetPorts;//коммуникационный порт привязанный к TLnkManager
+    private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Array<ISlot> = []; // массив слотов 
     private index: number = 0; // номер активного слота
-    private timerOutID = null;//ID таймера отсчёта TimeOut
-    private timerOpenPortID = null;//ожидание открытия порта
     private self: LinkManager = this;
 
-    constructor(port: NetPorts){
-        this.port = port;
-        let s = new Slot();
-        this.slots.push(s);
+    constructor(host: string){
+        this.host = host;
+        //let s = new Slot();
+        //this.slots.push(s);
+        this.addSlot([1, 17, 192, 44], this.onRead);
         //установка обработчика события поступления данных в порт
-        this.port.setOnRead (this.onRead, self);
+        //this.port.setOnRead (this.onRead, this.self);
     }
 
     //добавить слот
@@ -63,6 +67,7 @@ export default class LinkManager {
         console.log('TLnkManager.addSlot');
         const slot = new Slot(data, callback);//создаю новый слот
         this.slots.push(slot);//добавляю его в массив слотов
+        //this.port.setOnRead (callback, this.self);
     }
 
     public start (): void {
@@ -72,9 +77,11 @@ export default class LinkManager {
 
     //запускает Линк Манагер в автоматическую работу
     private chekPortOpen (): void {
+        /*
         (this.port.isOpen)
         ? this.run('PortOpen')
         : this.timerOpenPortID= setTimeout (this.chekPortOpen.bind(self),1000);
+        */
     }
 
 
@@ -86,13 +93,3 @@ export default class LinkManager {
 
     }
 }
-
-        /*
-        let s = new Slot();
-        s.name = '!';
-        s.Settings.TimeOut = 100;
-        s.Flow.Change = true;
-        s.out[0]=100;
-        s.in[0]=22;
-        s.onRead = this.onReadMessage;
-        this.slots.push(s);*/
