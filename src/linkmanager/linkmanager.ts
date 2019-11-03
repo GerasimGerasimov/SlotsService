@@ -1,17 +1,17 @@
 import {ISlot, Slot} from './slots'
+import {ICommunicationDriver} from '../comdrivers/comdrivers';
 const fetch = require('node-fetch');
 
-export default class LinkManager {
+export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Array<ISlot> = []; // массив слотов 
-    private index: number = 0; // номер активного слота
-    private self: LinkManager = this;
-    private UpdateTimerID:any = null;
+    private Driver: ICommunicationDriver = null;
 
-    constructor(host: string){
+    constructor(host: string, driver: ICommunicationDriver){
         this.host = host;
+        this.Driver = driver;
         this.addSlot([1, 17, 192, 44], this.onRead);
-        this.start();
+        this.cycle();
     }
 
     //добавить слот
@@ -21,45 +21,56 @@ export default class LinkManager {
         this.slots.push(slot);//добавляю его в массив слотов
     }
 
-    public async start () {
-        console.log('TLnkManager.start');
-        this.chekPortOpen();
-        await this.run('');
+    public handledDataResponce(data: any): any {
+        return data;
     }
 
-    //запускает Линк Манагер в автоматическую работу
-    private chekPortOpen (): void {
-        /*
-        (this.port.isOpen)
-        ? this.run('PortOpen')
-        : this.timerOpenPortID= setTimeout (this.chekPortOpen.bind(self),1000);
-        */
-    }
-
-    private handledResponse = (response: any) => {
-        console.log(response);
-        /*
-        switch (response.status) {
-            case 400: throw new CustomFetchError ('Bad request'   , response.status)
-            case 404: throw new CustomFetchError ('Url not found' , response.status)        
-            case 401: throw new CustomFetchError (response.message, response.status)                        
+    public async cycle () {
+        while (1) {
+            let index = this.slots.length;
+            while (index != 0 ) {
+                const slot: ISlot = this.slots[--index];
+                const data = await this.getDataAndState(slot);
+                const result = this.handledDataResponce(data);
+                console.log(result);
+                await this.delay(1);
+            }
+            await this.delay(0);
         }
-        */
-        return response.json()
     }
 
-    private validationJSON = (data: any) => {
-        console.log('AddGroup:data:',data)
-        return data
-    }
-
-    private startUpdateTimer =() => {
-        this.UpdateTimerID = setTimeout(()=>{}, 1000);
-    }
-
-    private async run(msg: string) {
+    public async getDataAndState(slot: ISlot): Promise<any> {      
         try {
-            //console.log('MainPageImagesController:getImages:', url, username, token);
+            return await this.getHostState({cmd:slot.out,
+                                            timeOut: slot.Settings.TimeOut,
+                                            NotRespond: slot.Flow.NoRespond});
+        } catch (e) {
+            return {
+                Status: 'Error',
+                Msg: `${e.message}`
+            }
+        }
+    }
+
+    private handledHTTPResponse (response: any) {
+        if (response.status === 404) throw new Error ('Url not found');
+        return response.text();
+    }
+
+    private validationJSON (data: any) {
+        try {
+            const res = JSON.parse(data);
+            return res;
+        } catch (e) {
+            return {
+                    Status: 'Error',
+                    Msg: 'Invalid JSON'
+            }
+        }
+    }
+
+    private async getHostState(msg: any):Promise<any> {
+        try {
             const header: any = {
                 method: 'PUT',
                 mode: 'cors',
@@ -68,17 +79,26 @@ export default class LinkManager {
                     'Content-Type': 'application/json;charset=utf-8',
                 },
                 body : JSON.stringify({
-                    "cmd": [1, 17, 192, 44],
-                    "timeOut":300,
-                    "wait": true
+                    "cmd": msg.cmd,
+                    "timeOut": msg.timeOut,
+                    "NotRespond": msg.NotRespond
                 })
             }
             return await fetch(this.host, header)
-                .then (this.handledResponse)
+                .then (this.handledHTTPResponse)
                 .then (this.validationJSON);
-        } catch (err) {
-            console.log(err);
+        } catch (e) {
+            return {
+                Status: 'Error',
+                Msg: `Fetch Error: ${e.message}`
+            }
         }
+    }
+
+    private delay(ms: number) {
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, ms);
+        });
     }
 
     private onRead(){
