@@ -91,12 +91,13 @@ const CRC16Lo = [
           Frame - массив в конец которого требуется добавить контрольную сумму
     */
     
-    export function appendCRC16toArray(Frame){
-        var crc = getArrayCRC16(Frame, Frame.length);//подсчет CRC буфера
+    export function appendCRC16toArray(Frame: Array<number>): any{
+        const result = Frame.slice();
+        const crc = getArrayCRC16(result, result.length);//подсчет CRC буфера
         //запись CRC в конец буфера
-        Frame.push(crc >> 8);
-        Frame.push(crc &  0xFF);
-        return Frame; 
+        result.push(crc >> 8);
+        result.push(crc &  0xFF);
+        return result; 
     }
     /*
 var crc = require('./crc16');

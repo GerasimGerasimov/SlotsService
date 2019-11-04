@@ -9,8 +9,8 @@ export class LinkManager {
 
     constructor(host: string, driver: ICommunicationDriver){
         this.host = host;
-        this.Driver = driver;
-        this.addSlot([1, 17, 192, 44], this.onRead);
+        this.Driver = driver;//[1, 17, 192, 44]
+        this.addSlot(this.Driver.addCtrlToMessage([1, 17]), this.onRead);
         this.cycle();
     }
 
