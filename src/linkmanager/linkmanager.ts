@@ -21,8 +21,25 @@ export class LinkManager {
         this.slots.push(slot);//добавляю его в массив слотов
     }
 
+    private handleStatusField (data: any) {
+        if (!data.status) throw new Error ('Not Status field');
+    }
+
+    private handleErrorStatus(data: any) {
+        if (data.status === 'Error') throw new Error (data.msg);
+    }
+
     public handledDataResponce(data: any): any {
-        return data;
+        try {
+            this.handleStatusField(data);
+            this.handleErrorStatus(data);
+            return this.Driver.validateRespond(data);
+        } catch (e) {
+            return {
+                status: 'Error',
+                msg: e.message
+            }
+        }
     }
 
     public async cycle () {
@@ -46,8 +63,8 @@ export class LinkManager {
                                             NotRespond: slot.Flow.NoRespond});
         } catch (e) {
             return {
-                Status: 'Error',
-                Msg: `${e.message}`
+                status: 'Error',
+                msg: `${e.message}`
             }
         }
     }
@@ -63,8 +80,8 @@ export class LinkManager {
             return res;
         } catch (e) {
             return {
-                    Status: 'Error',
-                    Msg: 'Invalid JSON'
+                    status: 'Error',
+                    msg: 'Invalid JSON'
             }
         }
     }
@@ -89,8 +106,8 @@ export class LinkManager {
                 .then (this.validationJSON);
         } catch (e) {
             return {
-                Status: 'Error',
-                Msg: `Fetch Error: ${e.message}`
+                status: 'Error',
+                msg: `Fetch Error: ${e.message}`
             }
         }
     }
