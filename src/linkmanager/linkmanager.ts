@@ -1,6 +1,7 @@
 import {ISlot, Slot} from './slots'
 import {ICommunicationDriver} from '../comdrivers/comdrivers';
 const fetch = require('node-fetch');
+import {IErrorMessage} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
@@ -11,6 +12,7 @@ export class LinkManager {
         this.host = host;
         this.Driver = driver;//[1, 17, 192, 44]
         this.addSlot(this.Driver.addCtrlToMessage([1, 17]), this.onRead);
+        this.addSlot(this.Driver.addCtrlToMessage([1, 3, 0, 0, 0, 10]), this.onRead);
         this.cycle();
     }
 
@@ -29,16 +31,13 @@ export class LinkManager {
         if (data.status === 'Error') throw new Error (data.msg);
     }
 
-    public handledDataResponce(data: any): any {
+    public handledDataResponce(data: any): any | IErrorMessage {
         try {
             this.handleStatusField(data);
             this.handleErrorStatus(data);
             return this.Driver.validateRespond(data);
         } catch (e) {
-            return {
-                status: 'Error',
-                msg: e.message
-            }
+            return {status: 'Error', msg: e.message} as IErrorMessage;
         }
     }
 
@@ -56,16 +55,13 @@ export class LinkManager {
         }
     }
 
-    public async getDataAndState(slot: ISlot): Promise<any> {      
+    public async getDataAndState(slot: ISlot): Promise<any | IErrorMessage>{      
         try {
             return await this.getHostState({cmd:slot.out,
                                             timeOut: slot.Settings.TimeOut,
                                             NotRespond: slot.Flow.NoRespond});
         } catch (e) {
-            return {
-                status: 'Error',
-                msg: `${e.message}`
-            }
+            return {status: 'Error', msg: e.message} as IErrorMessage;
         }
     }
 
@@ -74,19 +70,16 @@ export class LinkManager {
         return response.text();
     }
 
-    private validationJSON (data: any) {
+    private validationJSON (data: any): any | IErrorMessage {
         try {
             const res = JSON.parse(data);
             return res;
         } catch (e) {
-            return {
-                    status: 'Error',
-                    msg: 'Invalid JSON'
-            }
+            return {status: 'Error', msg: 'Invalid JSON'} as IErrorMessage;
         }
     }
 
-    private async getHostState(msg: any):Promise<any> {
+    private async getHostState(msg: any):Promise<any | IErrorMessage> {
         try {
             const header: any = {
                 method: 'PUT',
@@ -108,7 +101,7 @@ export class LinkManager {
             return {
                 status: 'Error',
                 msg: `Fetch Error: ${e.message}`
-            }
+            } as IErrorMessage;
         }
     }
 
