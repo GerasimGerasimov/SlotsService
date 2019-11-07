@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 export interface ISlot {
     ID: string;    // ID слота для идентификации    
     State: {
@@ -39,8 +41,8 @@ export class Slot implements ISlot {
     in = [];  // массив с данными полученными от устройства
     onRead = null// callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
 
-    constructor (data: any, callback: Function) {
+    constructor (data: any) {
         this.out = data;
-        this.onRead = callback;
+        this.ID = crypto.randomBytes(4).toString('hex');
     }
 }

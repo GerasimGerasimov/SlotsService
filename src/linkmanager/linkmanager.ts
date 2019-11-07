@@ -11,31 +11,31 @@ export class LinkManager {
     constructor(host: string, driver: ICommunicationDriver){
         this.host = host;
         this.Driver = driver;//[1, 17, 192, 44]
-        this.addSlot(this.Driver.addCtrlToMessage([1, 17]), this.onRead);
-        this.addSlot(this.Driver.addCtrlToMessage([1, 3, 0, 0, 0, 10]), this.onRead);
+        this.addSlot(this.Driver.addCtrlToMessage([1, 17]));
+        this.addSlot(this.Driver.addCtrlToMessage([1, 3, 0, 0, 0, 10]));
         this.cycle();
     }
 
     //добавить слот
-    public addSlot (data, callback){
+    public addSlot (data){
         console.log('TLnkManager.addSlot');
-        const slot = new Slot(data, callback);//создаю новый слот
+        const slot = new Slot(data);//создаю новый слот
         this.slots.push(slot);//добавляю его в массив слотов
     }
 
-    private handleStatusField (data: any): void {
-        if (!data.status) throw new Error ('Not Status field');
+    private handleStatusField (respond: any): void {
+        if (!respond.status) throw new Error ('Not Status field');
     }
 
-    private handleErrorStatus(data: any): void {
-        if (data.status === 'Error') throw new Error (data.msg);
+    private handleErrorStatus(respond: any): void {
+        if (respond.status === 'Error') throw new Error (respond.msg);
     }
 
-    public handledDataResponce(data: any): any | IErrorMessage {
+    public handledDataResponce(respond: any): any | IErrorMessage {
         try {
-            this.handleStatusField(data);
-            this.handleErrorStatus(data);
-            return this.Driver.validateRespond(data);
+            this.handleStatusField(respond);
+            this.handleErrorStatus(respond);
+            return this.Driver.validateRespond(respond);
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }
@@ -46,8 +46,8 @@ export class LinkManager {
             let index = this.slots.length;
             while (index != 0 ) {
                 const slot: ISlot = this.slots[--index];
-                const data = await this.getDataAndState(slot);
-                const result = this.handledDataResponce(data);
+                const respond = await this.getRespondAndState(slot);
+                const result = this.handledDataResponce(respond);
                 console.log(result);
                 await this.delay(1);
             }
@@ -55,7 +55,7 @@ export class LinkManager {
         }
     }
 
-    public async getDataAndState(slot: ISlot): Promise<any | IErrorMessage>{      
+    public async getRespondAndState(slot: ISlot): Promise<any | IErrorMessage>{      
         try {
             const request: ICmdToServer = {
                 cmd:slot.out,
@@ -81,7 +81,7 @@ export class LinkManager {
         }
     }
 
-    private async getHostState(msg: ICmdToServer):Promise<any | IErrorMessage> {
+    private async getHostState(request: ICmdToServer):Promise<any | IErrorMessage> {
         try {
             const header: any = {
                 method: 'PUT',
@@ -91,9 +91,9 @@ export class LinkManager {
                     'Content-Type': 'application/json;charset=utf-8',
                 },
                 body : JSON.stringify({
-                    "cmd": msg.cmd,
-                    "timeOut": msg.timeOut,
-                    "NotRespond": msg.NotRespond
+                    "cmd": request.cmd,
+                    "timeOut": request.timeOut,
+                    "NotRespond": request.NotRespond
                 })
             }
             return await fetch(this.host, header)
@@ -111,9 +111,5 @@ export class LinkManager {
         return new Promise((resolve, reject) => {
           setTimeout(resolve, ms);
         });
-    }
-
-    private onRead(){
-
     }
 }
