@@ -1,7 +1,7 @@
 import {ISlot, Slot} from './slots'
 import {ICommunicationDriver} from '../comdrivers/comdrivers';
 const fetch = require('node-fetch');
-import {IErrorMessage} from '../types/types'
+import {IErrorMessage, ICmdToServer} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
@@ -23,11 +23,11 @@ export class LinkManager {
         this.slots.push(slot);//добавляю его в массив слотов
     }
 
-    private handleStatusField (data: any) {
+    private handleStatusField (data: any): void {
         if (!data.status) throw new Error ('Not Status field');
     }
 
-    private handleErrorStatus(data: any) {
+    private handleErrorStatus(data: any): void {
         if (data.status === 'Error') throw new Error (data.msg);
     }
 
@@ -57,9 +57,12 @@ export class LinkManager {
 
     public async getDataAndState(slot: ISlot): Promise<any | IErrorMessage>{      
         try {
-            return await this.getHostState({cmd:slot.out,
-                                            timeOut: slot.Settings.TimeOut,
-                                            NotRespond: slot.Flow.NoRespond});
+            const request: ICmdToServer = {
+                cmd:slot.out,
+                    timeOut: slot.Settings.TimeOut,
+                        NotRespond: slot.Flow.NoRespond
+                        }
+            return await this.getHostState(request);
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }
@@ -72,14 +75,13 @@ export class LinkManager {
 
     private validationJSON (data: any): any | IErrorMessage {
         try {
-            const res = JSON.parse(data);
-            return res;
+            return JSON.parse(data);
         } catch (e) {
             return {status: 'Error', msg: 'Invalid JSON'} as IErrorMessage;
         }
     }
 
-    private async getHostState(msg: any):Promise<any | IErrorMessage> {
+    private async getHostState(msg: ICmdToServer):Promise<any | IErrorMessage> {
         try {
             const header: any = {
                 method: 'PUT',
