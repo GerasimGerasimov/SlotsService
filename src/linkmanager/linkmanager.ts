@@ -11,16 +11,18 @@ export class LinkManager {
     constructor(host: string, driver: ICommunicationDriver){
         this.host = host;
         this.Driver = driver;//[1, 17, 192, 44]
-        this.addSlot(this.Driver.addCtrlToMessage([1, 17]));
-        this.addSlot(this.Driver.addCtrlToMessage([1, 3, 0, 0, 0, 10]));
+        //this.addSlot([1, 17]);
+        this.addSlot([1, 3, 0, 0, 0, 10]);        
         this.cycle();
     }
 
     //добавить слот
-    public addSlot (data){
+    public addSlot (data): string{
         console.log('TLnkManager.addSlot');
         const slot = new Slot(data);//создаю новый слот
+        slot.out = this.Driver.addCtrlToMessage(slot.out);
         this.slots.push(slot);//добавляю его в массив слотов
+        return slot.ID;
     }
 
     private handleStatusField (respond: any): void {
@@ -42,14 +44,12 @@ export class LinkManager {
     }
 
     public async cycle () {
-        while (1) {
-            let index = this.slots.length;
-            while (index != 0 ) {
-                const slot: ISlot = this.slots[--index];
+        while (true) {
+            for (const slot of this.slots) {
                 const respond = await this.getRespondAndState(slot);
                 const result = this.handledDataResponce(respond);
                 console.log(result);
-                await this.delay(1);
+                await this.delay(1);                
             }
             await this.delay(0);
         }
