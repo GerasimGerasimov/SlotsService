@@ -30,13 +30,11 @@ export class AppServer implements IServer{
         });
     }
 
-    private get (request: any, response: any) {
-        console.log(`/v1/data/get> ${request.body.cmd || ''}`);
+    private getSlotInBuffByID (request: any, response: any) {
+        console.log(`/v1/slot/get> ${request.params.id || ''}`);
         (async ()=>{
             try {
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'msg':'Hello'})
+                response.json(this.lm.getSlotByID(request.params.id).in)
             } catch (e) {
                 response.status(400).json({'status':'Error',
                                             'msg': e.message || ''})
@@ -74,8 +72,8 @@ export class AppServer implements IServer{
     }
 
     public serve (): void {
-        app.route('/v1/data/')
-            .get(jsonParser, [this.get.bind(this)]);
+        app.route('/v1/slot/:id')
+            .get(jsonParser, [this.getSlotInBuffByID.bind(this)]);
 
         app.route('/v1/slots/')
             .put   (jsonParser, [this.addSlot.bind(this)])

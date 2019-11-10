@@ -30,6 +30,12 @@ export class LinkManager {
         return slot.ID;
     }
 
+    public getSlotByID(ID: string): ISlot {
+        let slot = this.slots.find(item => item.ID == ID);
+        if (!slot) throw new Error (`Slot ${ID} does not exist`);
+        return slot;
+    }
+
     private handleStatusField (respond: any): void {
         if (!respond.status) throw new Error ('Not Status field');
     }
@@ -52,8 +58,8 @@ export class LinkManager {
         while (true) {
             for (const slot of this.slots) {
                 const respond = await this.getRespondAndState(slot);
-                const result = this.handledDataResponce(respond);
-                console.log(result);
+                slot.in = this.handledDataResponce(respond);
+                console.log(slot.in);
                 await this.delay(1);                
             }
             await this.delay(0);

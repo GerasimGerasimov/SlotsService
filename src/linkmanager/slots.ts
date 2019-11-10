@@ -22,7 +22,7 @@ export interface ISlot {
         Change: boolean     // true - перейти к следующему слоту
     },
     out: Array<any>; // массив с данными (командой) для передачи в устройство
-    in: Array<any>;  // массив с данными полученными от устройства
+    in: any;  // данные полученные от устройства
 }
 
 export class Slot implements ISlot {
@@ -43,7 +43,7 @@ export class Slot implements ISlot {
         Change: false,    // true - перейти к следующему слоту
     };
     out = []; // массив с данными (командой) для передачи в устройство
-    in = [];  // массив с данными полученными от устройства
+    in: {};  // массив с данными полученными от устройства
 
     constructor (data: ISlotSet) {
         this.ID = data.ID;
