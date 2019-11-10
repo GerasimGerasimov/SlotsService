@@ -1,26 +1,31 @@
-import {ISlot, Slot} from './slots'
-import {ICommunicationDriver} from '../comdrivers/comdrivers';
+import {ISlot, ISlotSet, Slot} from './slots'
 const fetch = require('node-fetch');
 import {IErrorMessage, ICmdToServer} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Array<ISlot> = []; // массив слотов 
-    private Driver: ICommunicationDriver = null;
 
-    constructor(host: string, driver: ICommunicationDriver){
-        this.host = host;
-        this.Driver = driver;//[1, 17, 192, 44]
-        //this.addSlot([1, 17]);
-        this.addSlot([1, 3, 0, 0, 0, 10]);        
+    constructor(host: string){
+        this.host = host;     
         this.cycle();
     }
 
+    private handleSlotSet(data: ISlotSet): ISlotSet {
+        let result:ISlotSet = {ID:'', cmd:[], interval: 1000};
+        if (!data.ID)  throw new Error ('ID field is missing');
+        if (!data.cmd) throw new Error ('cmd field is missing');
+        result.ID = data.ID;
+        result.cmd = data.cmd;
+        result.interval = (typeof data.interval !== 'undefined') ? data.interval : 1000 ;
+        return result;
+    }
+
     //добавить слот
-    public addSlot (data): string{
+    public addSlot (data: ISlotSet): string{
         console.log('TLnkManager.addSlot');
-        const slot = new Slot(data);//создаю новый слот
-        slot.out = this.Driver.addCtrlToMessage(slot.out);
+        const SlotData: ISlotSet = this.handleSlotSet(data);
+        const slot = new Slot(SlotData);//создаю новый слот
         this.slots.push(slot);//добавляю его в массив слотов
         return slot.ID;
     }
@@ -37,7 +42,7 @@ export class LinkManager {
         try {
             this.handleStatusField(respond);
             this.handleErrorStatus(respond);
-            return this.Driver.validateRespond(respond);
+            return respond;
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }

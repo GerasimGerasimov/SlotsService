@@ -1,7 +1,12 @@
-const crypto = require("crypto");
+export interface ISlotSet {
+    ID: string, //ID слота
+    cmd: Array<any>, //команда слейву
+    interval?: number //частота активации слота в милисекундах
+}
 
 export interface ISlot {
-    ID: string;    // ID слота для идентификации    
+    ID: string;    // ID слота для идентификации
+    interval: number; //частота запуска слота на выполнение 
     State: {
         ErrPort: boolean,   // ошибка последовательного порта (например, он закрыт)
         ErrTimeOut: boolean,// ответ устройства не получен
@@ -18,11 +23,11 @@ export interface ISlot {
     },
     out: Array<any>; // массив с данными (командой) для передачи в устройство
     in: Array<any>;  // массив с данными полученными от устройства
-    onRead?: (...args: any[]) => void // callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
 }
 
 export class Slot implements ISlot {
-    ID:string = '';    // имя слота для идентификации    
+    ID:string = '';    // имя слота для идентификации
+    interval: number = 1000;
     State = {
         ErrPort: false,   // ошибка последовательного порта (например, он закрыт)
         ErrTimeOut: false,// ответ устройства не получен
@@ -39,10 +44,10 @@ export class Slot implements ISlot {
     };
     out = []; // массив с данными (командой) для передачи в устройство
     in = [];  // массив с данными полученными от устройства
-    onRead = null// callback функция которую требуется вызвать по получению даных от устройства (даже если есть ошибки)
 
-    constructor (data: any) {
-        this.out = data;
-        this.ID = crypto.randomBytes(4).toString('hex');
+    constructor (data: ISlotSet) {
+        this.ID = data.ID;
+        this.interval = data.interval;
+        this.out = data.cmd;
     }
 }

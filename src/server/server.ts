@@ -2,6 +2,7 @@ import express = require("express");
 import bodyParser = require('body-parser');
 import {LinkManager} from "../linkmanager/linkmanager";
 
+
 const app = express();
 const jsonParser = bodyParser.json()
 
@@ -46,7 +47,7 @@ export class AppServer implements IServer{
     private addSlot (request: any, response: any) {
         console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
             try {
-                const ID = this.lm.addSlot(request.body.cmd)
+                const ID = this.lm.addSlot(request.body)
                 response.json( {'status':'OK',
                                 'time': new Date().toISOString(),
                                 'result':`Slot ID:${ID} added`,
