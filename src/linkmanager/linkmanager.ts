@@ -25,19 +25,28 @@ export class LinkManager {
     public addSlot (data: ISlotSet): string{
         console.log('TLnkManager.addSlot');
         const SlotData: ISlotSet = this.handleSlotSet(data);
+        this.isSlotIDExist(SlotData.ID);
         const slot = new Slot(SlotData);//создаю новый слот
         this.slots.push(slot);//добавляю его в массив слотов
         return slot.ID;
     }
 
+    private isSlotIDExist(ID: string): void {
+        let result: boolean = false;
+        try {
+            result = (this.getSlotByID(ID) !== undefined);
+        } catch (e) {}
+        if (result) throw new Error (`Slot ID:${ID} already exist`);
+    }
+
     public getSlotByID(ID: string): ISlot {
         let slot = this.slots.find(item => item.ID == ID);
-        if (!slot) throw new Error (`Slot ${ID} does not exist`);
+        if (!slot) throw new Error (`Slot ID:${ID} does not exist`);
         return slot;
     }
 
     private handleStatusField (respond: any): void {
-        if (!respond.status) throw new Error ('Not Status field');
+        if (!respond.status) throw new Error ('Status field does not exist');
     }
 
     private handleErrorStatus(respond: any): void {
