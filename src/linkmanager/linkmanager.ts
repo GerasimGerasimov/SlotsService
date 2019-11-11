@@ -4,7 +4,6 @@ import {IErrorMessage, ICmdToServer} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
-    //private slots: Array<ISlot> = []; // массив слотов 
     private slots: Map<String, ISlot> = new Map();
 
     constructor(host: string){
@@ -13,12 +12,19 @@ export class LinkManager {
     }
 
     private handleSlotSet(data: ISlotSet): ISlotSet {
-        let result:ISlotSet = {ID:'', cmd:[], interval: 1000};
+        let result:ISlotSet = { ID:'',
+                                cmd:[],
+                                interval: 1000,
+                                NotRespond: false,
+                                TimeOut: 1000
+                            };
         if (!data.ID)  throw new Error ('ID field is missing');
         if (!data.cmd) throw new Error ('cmd field is missing');
         result.ID = data.ID;
         result.cmd = data.cmd;
-        result.interval = (typeof data.interval !== 'undefined') ? data.interval : 1000 ;
+        result.interval  = (typeof data.interval  !== 'undefined') ? data.interval  : 1000 ;
+        result.TimeOut   = (typeof data.TimeOut   !== 'undefined') ? data.TimeOut   : 1000 ;
+        result.NotRespond = (typeof data.NotRespond !== 'undefined') ? data.NotRespond : false ;
         return result;
     }
 
@@ -39,6 +45,7 @@ export class LinkManager {
         this.slots.delete(ID);
         return ID;
     }
+
     private isSlotIDExist(ID: string): void {
         let result: boolean = false;
         try {
@@ -71,13 +78,22 @@ export class LinkManager {
         }
     }
 
+    private checkSlotProperties(slot: ISlot): boolean {
+        const time = new Date().getTime();
+        if (time < slot.NextTime) return false;//время не пришло
+        slot.NextTime = time + slot.interval;//время следующего запуска слота
+        return true;//запуск слота
+    }
+
     public async cycle () {
         while (true) {
             for (const slot of this.slots.values()) {
-                const respond = await this.getRespondAndState(slot);
-                slot.in = this.handledDataResponce(respond);
-                console.log(slot.in);
-                await this.delay(1);                
+                if (this.checkSlotProperties(slot)) {
+                    const respond = await this.getRespondAndState(slot);
+                    slot.in = this.handledDataResponce(respond);
+                    console.log(slot.in);
+                }
+                await this.delay(1);
             }
             await this.delay(0);
         }
@@ -88,7 +104,7 @@ export class LinkManager {
             const request: ICmdToServer = {
                 cmd:slot.out,
                     timeOut: slot.Settings.TimeOut,
-                        NotRespond: slot.Flow.NoRespond
+                        NotRespond: slot.Flow.NotRespond
                         }
             return await this.getHostState(request);
         } catch (e) {
