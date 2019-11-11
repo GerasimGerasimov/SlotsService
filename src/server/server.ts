@@ -42,6 +42,20 @@ export class AppServer implements IServer{
         })();
     }
 
+    private deleteSlotByID (request: any, response: any) {
+        console.log(`/v1/slot/delete> ${request.params.id || ''}`);
+            try {
+                const ID = this.lm.deleteSlot(request.params.id)
+                response.json( {'status':'OK',
+                                'time': new Date().toISOString(),
+                                'result':`Slot ID:${ID} deleted`,
+                                'ID': ID})
+            } catch (e) {
+                response.status(400).json({'status':'Error',
+                                            'msg': e.message || ''})
+            }
+    }    
+
     private addSlot (request: any, response: any) {
         console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
             try {
@@ -56,28 +70,14 @@ export class AppServer implements IServer{
             }
     }
 
-    private deleteSlot (request: any, response: any) {
-        console.log(`/v1/slots/delete> ${request.body.id || ''}`);
-            try {
-                //const ID = this.lm.addSlot(request.body.cmd)
-                const ID = request.body.id;
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'result':`Slot ID:${ID} deleted`,
-                                'ID': ID})
-            } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
-            }
-    }
-
     public serve (): void {
         app.route('/v1/slot/:id')
-            .get(jsonParser, [this.getSlotInBuffByID.bind(this)]);
+            .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
+            .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
 
         app.route('/v1/slots/')
             .put   (jsonParser, [this.addSlot.bind(this)])
-            .delete(jsonParser, [this.deleteSlot.bind(this)]);
+
         app.listen(this.port);
     } 
 }

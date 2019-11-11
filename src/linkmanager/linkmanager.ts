@@ -4,7 +4,8 @@ import {IErrorMessage, ICmdToServer} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
-    private slots: Array<ISlot> = []; // массив слотов 
+    //private slots: Array<ISlot> = []; // массив слотов 
+    private slots: Map<String, ISlot> = new Map();
 
     constructor(host: string){
         this.host = host;     
@@ -23,14 +24,21 @@ export class LinkManager {
 
     //добавить слот
     public addSlot (data: ISlotSet): string{
-        console.log('TLnkManager.addSlot');
+        console.log('addSlot');
         const SlotData: ISlotSet = this.handleSlotSet(data);
         this.isSlotIDExist(SlotData.ID);
         const slot = new Slot(SlotData);//создаю новый слот
-        this.slots.push(slot);//добавляю его в массив слотов
+        this.slots.set(SlotData.ID, slot);//добавляю его в карту слотов
         return slot.ID;
     }
 
+    //удалить слот
+    public deleteSlot(ID: string): string {
+        console.log('deleteSlot');
+        this.getSlotByID(ID);//будет throw если слота нет
+        this.slots.delete(ID);
+        return ID;
+    }
     private isSlotIDExist(ID: string): void {
         let result: boolean = false;
         try {
@@ -40,7 +48,7 @@ export class LinkManager {
     }
 
     public getSlotByID(ID: string): ISlot {
-        let slot = this.slots.find(item => item.ID == ID);
+        let slot = this.slots.get(ID);
         if (!slot) throw new Error (`Slot ID:${ID} does not exist`);
         return slot;
     }
@@ -65,7 +73,7 @@ export class LinkManager {
 
     public async cycle () {
         while (true) {
-            for (const slot of this.slots) {
+            for (const slot of this.slots.values()) {
                 const respond = await this.getRespondAndState(slot);
                 slot.in = this.handledDataResponce(respond);
                 console.log(slot.in);
