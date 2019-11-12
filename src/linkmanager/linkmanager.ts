@@ -1,6 +1,6 @@
 import {ISlot, ISlotSet, Slot} from './slots'
+import {IErrorMessage, ICmdToServer, IServiceRespond} from '../types/types'
 const fetch = require('node-fetch');
-import {IErrorMessage, ICmdToServer} from '../types/types'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
@@ -60,6 +60,15 @@ export class LinkManager {
         return slot;
     }
 
+    public getAllSlotsInBuff(): any {
+        let result = {};
+        for (const [key, value] of this.slots.entries()) {
+            result[`${key}`] =  value.in;
+        }
+        console.log(result);
+        return result;
+    }
+    
     private handleStatusField (respond: any): void {
         if (!respond.status) throw new Error ('Status field does not exist');
     }
@@ -68,11 +77,11 @@ export class LinkManager {
         if (respond.status === 'Error') throw new Error (respond.msg);
     }
 
-    public handledDataResponce(respond: any): any | IErrorMessage {
+    public handledDataResponce(respond: any): IServiceRespond | IErrorMessage {
         try {
             this.handleStatusField(respond);
             this.handleErrorStatus(respond);
-            return respond;
+            return respond as IServiceRespond;
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }
@@ -104,7 +113,7 @@ export class LinkManager {
             const request: ICmdToServer = {
                 cmd:slot.out,
                     timeOut: slot.Settings.TimeOut,
-                        NotRespond: slot.Flow.NotRespond
+                        NotRespond: slot.Settings.NotRespond
                         }
             return await this.getHostState(request);
         } catch (e) {
@@ -134,11 +143,7 @@ export class LinkManager {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8',
                 },
-                body : JSON.stringify({
-                    "cmd": request.cmd,
-                    "timeOut": request.timeOut,
-                    "NotRespond": request.NotRespond
-                })
+                body : JSON.stringify(request)
             }
             return await fetch(this.host, header)
                 .then (this.handledHTTPResponse)

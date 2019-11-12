@@ -56,6 +56,21 @@ export class AppServer implements IServer{
             }
     }    
 
+    //отдаёт данные всех слотов    
+    private getSlotsInBuff(request: any, response: any) {
+        console.log(`/v1/slots/get>`);
+        try {
+            const data = this.lm.getAllSlotsInBuff();
+            response.json( {'status':'OK',
+                            'time': new Date().toISOString(),
+                            'slots': data})
+        } catch (e) {
+            response.status(400).json({'status':'Error',
+                                        'msg': e.message || ''})
+        }        
+    }
+
+    //Добавляет слот
     private addSlot (request: any, response: any) {
         console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
             try {
@@ -76,7 +91,8 @@ export class AppServer implements IServer{
             .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
 
         app.route('/v1/slots/')
-            .put   (jsonParser, [this.addSlot.bind(this)])
+            .get   (jsonParser, [this.getSlotsInBuff.bind(this)])
+            .put   (jsonParser, [this.addSlot.bind(this)]);
 
         app.listen(this.port);
     } 
