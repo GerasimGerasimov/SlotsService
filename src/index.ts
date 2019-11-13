@@ -1,8 +1,10 @@
 import {LinkManager} from "./linkmanager/linkmanager";
 import {AppServer, IServer} from "./server/server"
+import {getConfiguration} from "./utils/utils"
 
-const host: string = 'http://localhost:5000/v1/data/'
-const lm: LinkManager = new LinkManager(host);
-const Server: IServer = new AppServer(5001, lm);
+const settings = getConfiguration();
+console.log(settings);
+const lm: LinkManager = new LinkManager(settings.host);
+const Server: IServer = new AppServer(settings.port, lm);
 console.log('Slots Service started');
 Server.serve();

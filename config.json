@@ -1,0 +1,4 @@
+{
+    "host":"http://localhost:5000/v1/data/",
+    "port": 5001    
+}
