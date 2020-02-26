@@ -65,7 +65,7 @@ export class LinkManager {
         for (const [key, value] of this.slots.entries()) {
             result[`${key}`] =  value.in;
         }
-        console.log(result);
+        //console.log(result);
         return result;
     }
     
@@ -100,7 +100,7 @@ export class LinkManager {
                 if (this.checkSlotProperties(slot)) {
                     const respond = await this.getRespondAndState(slot);
                     slot.in = this.handledDataResponce(respond);
-                    console.log(slot.in);
+                    //console.log(slot.in);
                 }
                 await this.delay(1);
             }

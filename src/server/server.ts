@@ -31,7 +31,7 @@ export class AppServer implements IServer{
     }
 
     private getSlotInBuffByID (request: any, response: any) {
-        console.log(`/v1/slot/get> ${request.params.id || ''}`);
+        //console.log(`/v1/slot/get> ${request.params.id || ''}`);
         (async ()=>{
             try {
                 response.json(this.lm.getSlotByID(request.params.id).in)
@@ -43,7 +43,7 @@ export class AppServer implements IServer{
     }
 
     private deleteSlotByID (request: any, response: any) {
-        console.log(`/v1/slot/delete> ${request.params.id || ''}`);
+        //console.log(`/v1/slot/delete> ${request.params.id || ''}`);
             try {
                 const ID = this.lm.deleteSlot(request.params.id)
                 response.json( {'status':'OK',
@@ -58,7 +58,7 @@ export class AppServer implements IServer{
 
     //отдаёт данные всех слотов    
     private getSlotsInBuff(request: any, response: any) {
-        console.log(`/v1/slots/get>`);
+        //console.log(`/v1/slots/get>`);
         try {
             const data = this.lm.getAllSlotsInBuff();
             response.json( {'status':'OK',
@@ -72,7 +72,7 @@ export class AppServer implements IServer{
 
     //Добавляет слот
     private addSlot (request: any, response: any) {
-        console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
+        //console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
             try {
                 const ID = this.lm.addSlot(request.body)
                 response.json( {'status':'OK',
