@@ -12,7 +12,7 @@ export interface ISlot {
     ID: string;    // ID слота для идентификации
     interval: number; //частота запуска слота на выполнение 
     Settings: {
-        TimeOut: Number,         // время ожидания ответа в милисекундах
+        TimeOut: number,         // время ожидания ответа в милисекундах
         NotRespond: boolean, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)        
     },
     Flow: {
@@ -26,7 +26,6 @@ export interface ISlot {
 export class Slot implements ISlot {
     ID:string = '';    // имя слота для идентификации
     interval: number = 1000;
-    nextTime: number = 0; //время следующего запуска слота
     Settings = {
         TimeOut: 200,         // время ожидания ответа в милисекундах
         NotRespond: false, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)        
@@ -36,6 +35,7 @@ export class Slot implements ISlot {
     };
     out = []; // массив с данными (командой) для передачи в устройство
     in:IServiceRespond = {status:'', msg:[]};  // данные полученными от устройства
+    NextTime: number = 0; //время следующего запуска слота
 
     constructor (data: ISlotSet) {
         this.ID = data.ID;
@@ -43,14 +43,6 @@ export class Slot implements ISlot {
         this.out = data.cmd;
         this.Settings.NotRespond = data.NotRespond;
         this.Settings.TimeOut = data.TimeOut;
-        this.nextTime = new Date().getTime();
-    }
-
-    get NextTime(): number {
-        return this.nextTime;
-    }
-
-    set NextTime(time: number) {
-        this.nextTime = time;
+        this.NextTime = new Date().getTime();
     }
 }

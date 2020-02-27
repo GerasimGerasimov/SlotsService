@@ -32,8 +32,14 @@ export class LinkManager {
     public addSlot (data: ISlotSet): string{
         console.log('addSlot');
         const SlotData: ISlotSet = this.handleSlotSet(data);
-        this.isSlotIDExist(SlotData.ID);
-        const slot = new Slot(SlotData);//создаю новый слот
+        //this.isSlotIDExist(SlotData.ID);
+        var slot: Slot;
+        //TODO если слот уже существует то заменить в нём инфу без органичений
+        try {
+            slot = this.getSlotByID(SlotData.ID);
+        } catch (e) {
+            slot = new Slot(SlotData);//создаю новый слот
+        }
         this.slots.set(SlotData.ID, slot);//добавляю его в карту слотов
         return slot.ID;
     }
