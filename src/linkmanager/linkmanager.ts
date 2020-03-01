@@ -1,6 +1,6 @@
 import {ISlot, ISlotSet, Slot} from './slots'
 import {IErrorMessage, ICmdToServer, IServiceRespond} from '../types/types'
-const fetch = require('node-fetch');
+import {SerialController} from '../controllers/serialcontroller'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
@@ -92,24 +92,6 @@ export class LinkManager {
         return result;
     }
 
-    private handleStatusField (respond: any): void {
-        if (!respond.status) throw new Error ('Status field does not exist');
-    }
-
-    private handleErrorStatus(respond: any): void {
-        if (respond.status === 'Error') throw new Error (respond.msg);
-    }
-
-    public handledDataResponce(respond: any): IServiceRespond | IErrorMessage {
-        try {
-            this.handleStatusField(respond);
-            this.handleErrorStatus(respond);
-            return respond as IServiceRespond;
-        } catch (e) {
-            return {status: 'Error', msg: e.message} as IErrorMessage;
-        }
-    }
-
     private checkSlotProperties(slot: ISlot): boolean {
         const time = new Date().getTime();
         if (time < slot.NextTime) return false;//время не пришло
@@ -122,7 +104,7 @@ export class LinkManager {
             for (const slot of this.slots.values()) {
                 if (this.checkSlotProperties(slot)) {
                     const respond = await this.getRespondAndState(slot);
-                    slot.in = this.handledDataResponce(respond);
+                    slot.in = SerialController.handledDataResponce(respond);
                 }
                 await this.delay(1);
             }
@@ -137,44 +119,9 @@ export class LinkManager {
                     timeOut: slot.Settings.TimeOut,
                         NotRespond: slot.Settings.NotRespond
                         }
-            return await this.getHostState(request);
+            return await SerialController.getHostState(this.host, request);
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
-        }
-    }
-
-    private handledHTTPResponse (response: any) {
-        if (response.status === 404) throw new Error ('Url not found');
-        return response.text();
-    }
-
-    private validationJSON (data: any): any | IErrorMessage {
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            return {status: 'Error', msg: 'Invalid JSON'} as IErrorMessage;
-        }
-    }
-
-    private async getHostState(request: ICmdToServer):Promise<any | IErrorMessage> {
-        try {
-            const header: any = {
-                method: 'PUT',
-                mode: 'cors',
-                cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8',
-                },
-                body : JSON.stringify(request)
-            }
-            return await fetch(this.host, header)
-                .then (this.handledHTTPResponse)
-                .then (this.validationJSON);
-        } catch (e) {
-            return {
-                status: 'Error',
-                msg: `Fetch Error: ${e.message}`
-            } as IErrorMessage;
         }
     }
 
