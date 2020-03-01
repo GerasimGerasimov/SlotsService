@@ -75,6 +75,23 @@ export class LinkManager {
         return result;
     }
     
+    
+    public getRequiredSlotsData(required: Array<string>): any {
+        let result = {};
+        required.forEach ((key: string) => {
+            let value: ISlot = this.slots.get(key);
+            if (value === undefined) {
+                result[`${key}`] = {
+                    status:'Error',
+                    msg: `Slot ID:${key} does not exist`
+                };
+            } else {
+                result[`${key}`] =  value.in;
+            }
+        });
+        return result;
+    }
+
     private handleStatusField (respond: any): void {
         if (!respond.status) throw new Error ('Status field does not exist');
     }
@@ -106,11 +123,10 @@ export class LinkManager {
                 if (this.checkSlotProperties(slot)) {
                     const respond = await this.getRespondAndState(slot);
                     slot.in = this.handledDataResponce(respond);
-                    //console.log(slot.in);
                 }
                 await this.delay(1);
             }
-            await this.delay(0);
+            await this.delay(1);
         }
     }
 
