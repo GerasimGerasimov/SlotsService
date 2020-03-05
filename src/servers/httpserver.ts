@@ -1,3 +1,4 @@
+import http = require('http');
 import express = require("express");
 import bodyParser = require('body-parser');
 import {LinkManager} from "../linkmanager/linkmanager";
@@ -6,11 +7,8 @@ import {LinkManager} from "../linkmanager/linkmanager";
 const app = express();
 const jsonParser = bodyParser.json()
 
-export interface IServer {
-    serve (): void;
-}
-
-export class AppServer implements IServer{
+export class HttpServer {
+    public https: any;
 
     private port: number;
     private lm:  LinkManager;
@@ -28,6 +26,19 @@ export class AppServer implements IServer{
             res.header('Access-Control-Allow-Headers', 'Content-Type');
             next();
         });
+
+        app.route('/v1/slot/:id')
+        .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
+        .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
+
+        app.route('/v1/slots/')
+            .get   (jsonParser, [this.getAllSlotsData.bind(this)])
+            .put   (jsonParser, [this.addSlot.bind(this)]);
+        
+        app.route('/v2/slots/')
+        .put   (jsonParser, [this.getRequiredSlotsData.bind(this)]);
+            
+        this.https = http.createServer(app).listen(this.port);
     }
 
     private getSlotInBuffByID (request: any, response: any) {
@@ -99,18 +110,4 @@ export class AppServer implements IServer{
             }
     }
 
-    public serve (): void {
-        app.route('/v1/slot/:id')
-            .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
-            .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
-
-        app.route('/v1/slots/')
-            .get   (jsonParser, [this.getAllSlotsData.bind(this)])
-            .put   (jsonParser, [this.addSlot.bind(this)]);
-        
-        app.route('/v2/slots/')
-        .put   (jsonParser, [this.getRequiredSlotsData.bind(this)]);
-            
-        app.listen(this.port);
-    } 
 }
