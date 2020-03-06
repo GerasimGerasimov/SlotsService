@@ -7,13 +7,13 @@ import {LinkManager} from "../../linkmanager/linkmanager";
 const app = express();
 const jsonParser = bodyParser.json()
 
-export class HttpServer {
+export default class HttpServer {
     public https: any;
 
     private port: number;
     private lm:  LinkManager;
 
-    constructor (port: number, lm: LinkManager) {
+    constructor (port: any, lm: LinkManager) {
         this.port = port;
         this.lm = lm;
         this.init()

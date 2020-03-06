@@ -1,44 +1,47 @@
-import http = require('http');
-import express = require("express");
-import bodyParser = require('body-parser');
-import {LinkManager} from "../linkmanager/linkmanager";
+import WebSocket = require('ws');
+import {LinkManager} from "../../linkmanager/linkmanager";
 
+export default class WSServer {
+    private https: any;
 
-const app = express();
-const jsonParser = bodyParser.json()
-
-export class HttpServer {
-    public https: any;
-
-    private port: number;
+    
     private lm:  LinkManager;
+    private wss: any;
 
-    constructor (port: number, lm: LinkManager) {
-        this.port = port;
+    constructor (https: any, lm: LinkManager) {
+        this.https = https;
         this.lm = lm;
         this.init()
     }
 
-    private init () {
-        app.all('*', function(req, res, next) {
-            res.header("Access-Control-Allow-Origin", "*");
-            res.header("Access-Control-Allow-Headers", "X-Requested-With");
-            res.header('Access-Control-Allow-Headers', 'Content-Type');
-            next();
-        });
+    private init () {           
+        this.wss = new WebSocket.Server({server: this.https});
+        this.wss.on('connection', this.connectionOnWss.bind(this));
+    }
 
-        app.route('/v1/slot/:id')
-        .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
-        .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
+    private connectionOnWss( ws: WebSocket) {
+        console.log('Connection');
+        ws.on('message', this.onMessage.bind(this, ws));
+        ws.on('close', this.onClose.bind(this, ws))
+    }
 
-        app.route('/v1/slots/')
-            .get   (jsonParser, [this.getAllSlotsData.bind(this)])
-            .put   (jsonParser, [this.addSlot.bind(this)]);
-        
-        app.route('/v2/slots/')
-        .put   (jsonParser, [this.getRequiredSlotsData.bind(this)]);
+    private async onMessage(ws: WebSocket, message: any) {
+        var result: any;
+        try {
+            //пришёл запрос от клиента, надо его распарсить
+            // TODO разработать заголовки объектов
+            //result = await this.com.getCOMAnswer(JSON.parse(message));
             
-        this.https = http.createServer(app).listen(this.port);
+        } catch (e) {
+            result = {status:'Error',
+                      msg: e.message || ''}
+        }
+        const res = JSON.stringify(result);
+        ws.send(res);
+    }
+
+    private onClose(ws: WebSocket){
+        console.log('Connection close');
     }
 
     private getSlotInBuffByID (request: any, response: any) {
