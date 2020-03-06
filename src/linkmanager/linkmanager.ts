@@ -1,13 +1,11 @@
 import {ISlot, ISlotSet, Slot} from './slots'
 import {IErrorMessage, ICmdToServer} from '../types/types'
-import {SerialController} from '../clients/ws/wsclient'
+import {SerialController} from '../clients/ws/client'
 
 export class LinkManager {
-    private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Map<String, ISlot> = new Map();
 
     constructor(host: string){
-        this.host = host;
         SerialController.init(host);
         this.cycle();
     }
@@ -104,7 +102,10 @@ export class LinkManager {
         while (true) {
             for (const slot of this.slots.values()) {
                 if (this.checkSlotProperties(slot)) {
+                    const start = new Date().getTime();
                     const respond = await this.getRespondAndState(slot);
+                    const stop = new Date().getTime(); 
+                    //console.log(`Duration: ${stop-start}: respond: ${respond.duration}`)
                     slot.in = SerialController.handledDataResponce(respond);
                 }
                 await this.delay(1);
