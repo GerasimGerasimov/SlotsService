@@ -1,4 +1,4 @@
-import WSControl from './controller'
+import WSControl from '../../controllers/wscontroller'
 import {IErrorMessage, ICmdToServer, IServiceRespond} from '../../types/types'
 
 export class SerialController {
