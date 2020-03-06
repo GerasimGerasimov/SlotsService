@@ -1,13 +1,14 @@
 import {ISlot, ISlotSet, Slot} from './slots'
-import {IErrorMessage, ICmdToServer, IServiceRespond} from '../types/types'
-import {SerialController} from '../controllers/serialcontroller'
+import {IErrorMessage, ICmdToServer} from '../types/types'
+import {SerialController} from '../clients/ws/wsclient'
 
 export class LinkManager {
     private host: string;//URL коммуникационного порта привязанного к TLnkManager
     private slots: Map<String, ISlot> = new Map();
 
     constructor(host: string){
-        this.host = host;     
+        this.host = host;
+        SerialController.init(host);
         this.cycle();
     }
 
@@ -119,13 +120,13 @@ export class LinkManager {
                     timeOut: slot.Settings.TimeOut,
                         NotRespond: slot.Settings.NotRespond
                         }
-            return await SerialController.getHostState(this.host, request);
+            return await SerialController.getHostState(request);
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }
     }
 
-    private delay(ms: number) {
+    private async delay(ms: number): Promise<any> {
         return new Promise((resolve, reject) => {
           setTimeout(resolve, ms);
         });

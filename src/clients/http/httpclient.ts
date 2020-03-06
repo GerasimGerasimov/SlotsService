@@ -1,8 +1,15 @@
 const fetch = require('node-fetch');
-import {IErrorMessage, ICmdToServer, IServiceRespond} from '../types/types'
+import {IErrorMessage, ICmdToServer, IServiceRespond} from '../../types/types'
 
 export class SerialController {
-    public static async getHostState(host: string, request: ICmdToServer):Promise<any | IErrorMessage> {
+
+    private static host: string;
+
+    public static init(host: string){
+        this.host = host;
+    }
+
+    public static async getHostState(request: ICmdToServer):Promise<any | IErrorMessage> {
         try {
             const header: any = {
                 method: 'PUT',
@@ -13,7 +20,7 @@ export class SerialController {
                 },
                 body : JSON.stringify(request)
             }
-            return await fetch(host, header)
+            return await fetch(this.host, header)
                 .then (this.handledHTTPResponse)
                 .then (this.validationJSON);
         } catch (e) {
