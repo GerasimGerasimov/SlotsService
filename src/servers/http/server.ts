@@ -2,6 +2,7 @@ import http = require('http');
 import express = require("express");
 import bodyParser = require('body-parser');
 import {LinkManager} from "../../linkmanager/linkmanager";
+import {ErrorMessage, validationJSON} from '../../types/types'
 
 
 const app = express();
@@ -28,15 +29,14 @@ export default class HttpServer {
         });
 
         app.route('/v1/slot/:id')
-        .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
-        .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
+            .get   (jsonParser, [this.getSlotInBuffByID.bind(this)])
+            .delete(jsonParser, [this.deleteSlotByID.bind(this)]);
 
         app.route('/v1/slots/')
-            .get   (jsonParser, [this.getAllSlotsData.bind(this)])
             .put   (jsonParser, [this.addSlot.bind(this)]);
         
         app.route('/v2/slots/')
-        .put   (jsonParser, [this.getRequiredSlotsData.bind(this)]);
+            .put   (jsonParser, [this.getRequiredSlotsData.bind(this)]);
             
         this.https = http.createServer(app).listen(this.port);
     }
@@ -45,10 +45,9 @@ export default class HttpServer {
         //console.log(`/v1/slot/get> ${request.params.id || ''}`);
         (async ()=>{
             try {
-                response.json(this.lm.getSlotByID(request.params.id).in)
+                response.json(this.lm.getSlotByID(request.params.id).in);
             } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
+                response.status(400).json(ErrorMessage(e.message || ''));
             };
         })();
     }
@@ -57,29 +56,14 @@ export default class HttpServer {
         //console.log(`/v1/slot/delete> ${request.params.id || ''}`);
             try {
                 const ID = this.lm.deleteSlot(request.params.id)
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'result':`Slot ID:${ID} deleted`,
-                                'ID': ID})
+                response.json( {status:'OK',
+                                time: new Date().toISOString(),
+                                result:`Slot ID:${ID} deleted`,
+                                ID: ID})
             } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
+                response.status(400).json(ErrorMessage(e.message || ''))
             }
     }    
-
-    //отдаёт данные всех слотов    
-    private getAllSlotsData(request: any, response: any) {
-        //console.log(`/v1/slots/get>`);
-        try {
-            const data = this.lm.getAllSlotsInBuff();
-            response.json( {'status':'OK',
-                            'time': new Date().toISOString(),
-                            'slots': data})
-        } catch (e) {
-            response.status(400).json({'status':'Error',
-                                        'msg': e.message || ''})
-        }        
-    }
 
     //отдаёт данные всех слотов    
     private getRequiredSlotsData(request: any, response: any) {
@@ -87,12 +71,11 @@ export default class HttpServer {
             const required: Array<string> = request.body.slots;
             console.log(required);
             const data = this.lm.getRequiredSlotsData(required);
-            response.json( {'status':'OK',
-                            'time': new Date().toISOString(),
-                            'slots': data})
+            response.json( {status:'OK',
+                            time: new Date().toISOString(),
+                            slots: data})
         } catch (e) {
-            response.status(400).json({'status':'Error',
-                                        'msg': e.message || ''})
+            response.status(400).json(ErrorMessage(e.message || ''))
         }        
     }
     //Добавляет слот
@@ -100,13 +83,12 @@ export default class HttpServer {
         //console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
             try {
                 const ID = this.lm.addSlot(request.body)
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'result':`Slot ID:${ID} added`,
-                                'ID': ID})
+                response.json( {status:'OK',
+                                time: new Date().toISOString(),
+                                result:`Slot ID:${ID} added`,
+                                ID: ID})
             } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
+                response.status(400).json(ErrorMessage(e.message || ''))
             }
     }
 

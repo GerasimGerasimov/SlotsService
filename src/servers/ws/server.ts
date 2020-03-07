@@ -1,10 +1,9 @@
 import WebSocket = require('ws');
 import {LinkManager} from "../../linkmanager/linkmanager";
+import {IErrorMessage, ErrorMessage, validationJSON} from '../../types/types'
 
 export default class WSServer {
     private https: any;
-
-    
     private lm:  LinkManager;
     private wss: any;
 
@@ -25,92 +24,79 @@ export default class WSServer {
         ws.on('close', this.onClose.bind(this, ws))
     }
 
-    private async onMessage(ws: WebSocket, message: any) {
+    private onMessage(ws: WebSocket, message: any) {
         var result: any;
         try {
-            //пришёл запрос от клиента, надо его распарсить
-            // TODO разработать заголовки объектов
-            //result = await this.com.getCOMAnswer(JSON.parse(message));
-            
+            const request = validationJSON(message);
+            result = this.decodeCommand(request);
         } catch (e) {
-            result = {status:'Error',
-                      msg: e.message || ''}
+            result = ErrorMessage(e.message || '');
         }
-        const res = JSON.stringify(result);
-        ws.send(res);
+        ws.send(JSON.stringify(result));
     }
 
     private onClose(ws: WebSocket){
         console.log('Connection close');
     }
 
-    private getSlotInBuffByID (request: any, response: any) {
-        //console.log(`/v1/slot/get> ${request.params.id || ''}`);
-        (async ()=>{
-            try {
-                response.json(this.lm.getSlotByID(request.params.id).in)
-            } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
-            };
-        })();
+    private decodeCommand(cmd: any): any | IErrorMessage {
+        const key = this.getCmdName(cmd);
+        const commands = {
+            'add'    : this.addSlot.bind(this),
+            'get'    : this.getRequiredSlotsData.bind(this),
+            'delete' : this.deleteSlotByID.bind(this),
+            'default': () => {
+                return ErrorMessage('Unknown command');
+            }
+        }
+        return (commands[key] || commands['default'])(cmd[key])
     }
 
-    private deleteSlotByID (request: any, response: any) {
-        //console.log(`/v1/slot/delete> ${request.params.id || ''}`);
+    private getCmdName(cmd: any): string {
+        for (let key in cmd) {
+            return key;
+          }
+        throw new Error ('Invalid request format');
+    }
+
+    private deleteSlotByID (request: any): any | IErrorMessage {
             try {
-                const ID = this.lm.deleteSlot(request.params.id)
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'result':`Slot ID:${ID} deleted`,
-                                'ID': ID})
+                const ID = this.lm.deleteSlot(request)
+                return {
+                        status:'OK',
+                        time: new Date().toISOString(),
+                        result:`Slot ID:${ID} deleted`,
+                        ID: ID};
             } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
+                return ErrorMessage(e.message || '');
             }
     }    
 
     //отдаёт данные всех слотов    
-    private getAllSlotsData(request: any, response: any) {
-        //console.log(`/v1/slots/get>`);
+    private getRequiredSlotsData(request: any): any | IErrorMessage {
         try {
-            const data = this.lm.getAllSlotsInBuff();
-            response.json( {'status':'OK',
-                            'time': new Date().toISOString(),
-                            'slots': data})
-        } catch (e) {
-            response.status(400).json({'status':'Error',
-                                        'msg': e.message || ''})
-        }        
-    }
-
-    //отдаёт данные всех слотов    
-    private getRequiredSlotsData(request: any, response: any) {
-        try {
-            const required: Array<string> = request.body.slots;
+            const required: Array<string> = request;
             console.log(required);
             const data = this.lm.getRequiredSlotsData(required);
-            response.json( {'status':'OK',
-                            'time': new Date().toISOString(),
-                            'slots': data})
+            return {
+                    status:'OK',
+                    time: new Date().toISOString(),
+                    slots: data};
         } catch (e) {
-            response.status(400).json({'status':'Error',
-                                        'msg': e.message || ''})
+            return ErrorMessage(e.message || '');
         }        
     }
     //Добавляет слот
-    private addSlot (request: any, response: any) {
-        //console.log(`/v1/slots/put> ${request.body.cmd || ''}`);
+    private addSlot (request: any): any | IErrorMessage {
             try {
-                const ID = this.lm.addSlot(request.body)
-                response.json( {'status':'OK',
-                                'time': new Date().toISOString(),
-                                'result':`Slot ID:${ID} added`,
-                                'ID': ID})
+                const ID = this.lm.addSlot(request)
+                return {
+                        status:'OK',
+                        time: new Date().toISOString(),
+                        result:`Slot ID:${ID} added`,
+                        ID: ID}
             } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
+                return ErrorMessage(e.message || '');
             }
     }
-
 }

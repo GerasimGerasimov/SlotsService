@@ -1,5 +1,5 @@
 import WSControl from '../../controllers/wscontroller'
-import {IErrorMessage, ICmdToServer, IServiceRespond} from '../../types/types'
+import {IErrorMessage, ErrorMessage, ICmdToServer, IServiceRespond, validationJSON} from '../../types/types'
 
 export class SerialController {
 
@@ -11,12 +11,9 @@ export class SerialController {
         try {
             const payload = JSON.stringify(request);
             return await WSControl.send(payload)
-                .then (this.validationJSON);
+                .then (validationJSON);
         } catch (e) {
-            return {
-                status: 'Error',
-                msg: `Fetch Error: ${e.message}`
-            } as IErrorMessage;
+            return ErrorMessage (`Fetch Error: ${e.message}`);
         }
     }
 
@@ -26,15 +23,7 @@ export class SerialController {
             this.handleErrorStatus(respond);
             return respond as IServiceRespond;
         } catch (e) {
-            return {status: 'Error', msg: e.message} as IErrorMessage;
-        }
-    }
-
-    private static validationJSON (data: any): any | IErrorMessage {
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            return {status: 'Error', msg: 'Invalid JSON'} as IErrorMessage;
+            return ErrorMessage (e.message);
         }
     }
 
