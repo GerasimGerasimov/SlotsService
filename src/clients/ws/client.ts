@@ -3,14 +3,15 @@ import {IErrorMessage, ErrorMessage, ICmdToServer, IServiceRespond, validationJS
 
 export class SerialController {
 
+    private static wsc: WSControl;
     public static init(host: string){
-        WSControl.init(host);
+        this.wsc = new  WSControl(host);
     }
 
     public static async getHostState(request: ICmdToServer):Promise<any | IErrorMessage> {
         try {
             const payload = JSON.stringify(request);
-            return await WSControl.send(payload)
+            return await this.wsc.send(payload)
                 .then (validationJSON);
         } catch (e) {
             return ErrorMessage (`Fetch Error: ${e.message}`);

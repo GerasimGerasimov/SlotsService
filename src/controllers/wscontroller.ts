@@ -2,18 +2,18 @@ import WebSocket = require('ws');
 
 export default class WSControl {
 
-    private static host: string;
-    private static ws:WebSocket;
-    private static hostState: boolean = false;
+    private host: string;
+    private ws:WebSocket;
+    private hostState: boolean = false;
 
-    static count: number = 0;
+    private count: number = 0;
 
-    public static init(host: string){
+    constructor (host: string){
         this.host = host;
         this.initSocket();
     }
 
-    public static async send(request: string): Promise<string> {
+    public async send(request: string): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 if (!this.hostState)
@@ -48,23 +48,23 @@ export default class WSControl {
     }
 
     // Инициализация сокета и восстановление связи
-    private static initSocket() {
+    private initSocket() {
         this.ws = new WebSocket(this.host);
         this.ws.onerror = this.onError.bind(this);
         this.ws.onopen = this.onOpen.bind(this);
         this.ws.onclose = this.onClose.bind(this);
     }
 
-    private static onOpen(event: any) {
+    private onOpen(event: any) {
         console.log(`Opened connection to ${this.host}`);
         this.hostState = true;
     }    
 
-    private static onError(event: any) {
+    private onError(event: any) {
         console.log(`Error of connection to ${this.host} ${event}`);
     }
 
-    private static onClose(event: any) {
+    private onClose(event: any) {
         console.log(`Closed connection to ${this.host}`);
         this.hostState = false;
         setTimeout(() => {
@@ -74,7 +74,7 @@ export default class WSControl {
     }
 
     //чтени сокета в режиме запрос-ожидание ответа- ответ
-    private static async waitBufferRelease(): Promise<any> {
+    private async waitBufferRelease(): Promise<any> {
         return new Promise((resolve, reject) => {
             var timeOutTimer: any = undefined;
             var chekBufferTimer: any = undefined;
