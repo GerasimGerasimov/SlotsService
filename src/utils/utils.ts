@@ -1,4 +1,8 @@
 import fs = require('fs');
+//криптография
+import crypto = require('crypto');
+import base64url from 'base64url'
+
 
 export function getConfiguration (): any {
     console.log('Slots Service init');
@@ -24,4 +28,8 @@ function getArguments():any {
     // console.log(`host: ${host}`);
     // console.log(`port: ${port}`);
     return {filename, host, port};
+}
+
+export function randomStringAsBase64Url(size: number): string {
+    return base64url(crypto.randomBytes(size));
 }

@@ -4,10 +4,14 @@ import {SerialController} from '../clients/ws/client'
 
 export class LinkManager {
     private slots: Map<String, ISlot> = new Map();
+    private tmpSlotNumber: number = 0;
+    private tmpSlot: ISlot = undefined;
+    private TimerPullControl: any = undefined;
+    private count: number = 0;
 
     constructor(host: string){
-        SerialController.init(host);
-        this.cycle();
+        SerialController.init(host, this.checkIncomingMessage.bind(this));
+        this.controlResponds();
     }
 
     private handleSlotSet(data: ISlotSet): ISlotSet {
@@ -51,14 +55,6 @@ export class LinkManager {
         return ID;
     }
 
-    private isSlotIDExist(ID: string): void {
-        let result: boolean = false;
-        try {
-            result = (this.getSlotByID(ID) !== undefined);
-        } catch (e) {}
-        if (result) throw new Error (`Slot ID:${ID} already exist`);
-    }
-
     public getSlotByID(ID: string): ISlot {
         let slot = this.slots.get(ID);
         if (!slot) throw new Error (`Slot ID:${ID} does not exist`);
@@ -70,7 +66,6 @@ export class LinkManager {
         for (const [key, value] of this.slots.entries()) {
             result[`${key}`] =  value.in;
         }
-        //console.log(result);
         return result;
     }
     
@@ -98,38 +93,68 @@ export class LinkManager {
         return true;//запуск слота
     }
 
-    public async cycle () {
-        while (true) {
-            for (const slot of this.slots.values()) {
-                if (this.checkSlotProperties(slot)) {
-                    const start = new Date().getTime();
-                    const respond = await this.getRespondAndState(slot);
-                    const stop = new Date().getTime(); 
-                    //console.log(`Duration: ${stop-start}: respond: ${respond.duration}`)
-                    slot.in = SerialController.handledDataResponce(respond);
-                }
-                await this.delay(1);
+    private getNextSlot(): ISlot {
+        const mapLen = this.slots.size;
+        var index: number = 0;
+        try {
+            if (mapLen) {
+                this.slots.forEach((value:ISlot, key: string) => {
+                    if (this.tmpSlotNumber >= mapLen) this.tmpSlotNumber = 0;
+                    if (index++ == this.tmpSlotNumber) {
+                        this.tmpSlotNumber++;
+                        throw new Error(key);
+                    }
+                })
             }
-            await this.delay(1);
+        } catch (e) {
+            return this.slots.get(e.message);
         }
+        this.tmpSlotNumber = 0;
+        this.tmpSlot = undefined;
+        return undefined;
     }
 
-    public async getRespondAndState(slot: ISlot): Promise<any | IErrorMessage>{      
+    private async checkIncomingMessage(msg: any) {
+        if (this.TimerPullControl) clearTimeout(this.TimerPullControl);//остановлю таймер
+        if (this.tmpSlot) {
+            this.tmpSlot.in = msg;
+            console.log(this.count++, this.tmpSlot.ID);
+            //отправить клиенту подписанному на эти данные
+        }
+        this.pollNextSlot();
+    }
+
+    private async pollNextSlot() {
+        var NextPollTime: number = 1;
+        const slot: Slot = this.getNextSlot();
+        this.tmpSlot = slot;
+        if (slot) {
+            if (this.checkSlotProperties) //пришло время запустить слот
+            await this.sendCmdToServer(slot);
+            NextPollTime = slot.Settings.TimeOut;
+        }
+        //я надеюсь что слот ответит раньше чем ТаймАут, но если не ответил вообще
+        //то надо подтолкнуть очередь (перейти к следующему слоту)
+        //если ждать ответа не надо (но ответ-то "" всё равно есть)
+        this.TimerPullControl = setTimeout(this.controlResponds.bind(this), NextPollTime);
+    }
+
+    //будет подталвивать поток сообщений
+    private controlResponds(){
+        this.pollNextSlot();
+    }
+
+    public async sendCmdToServer(slot: ISlot): Promise<any | IErrorMessage>{      
         try {
             const request: ICmdToServer = {
                 cmd:slot.out,
                     timeOut: slot.Settings.TimeOut,
                         NotRespond: slot.Settings.NotRespond
                         }
-            return await SerialController.getHostState(request);
+            await SerialController.sendCmdToServer(request);
         } catch (e) {
             return {status: 'Error', msg: e.message} as IErrorMessage;
         }
     }
 
-    private async delay(ms: number): Promise<any> {
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, ms);
-        });
-    }
 }

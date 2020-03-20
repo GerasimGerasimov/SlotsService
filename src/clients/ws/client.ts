@@ -1,24 +1,30 @@
-import WSControl from '../../controllers/wscontroller'
+import WSControl from '../ws/controllers/wscontroller'
 import {IErrorMessage, ErrorMessage, ICmdToServer, IServiceRespond, validationJSON} from '../../types/types'
 
 export class SerialController {
+    private static wss: WSControl;
+    private static onIncomingMessage: Function = undefined;
 
-    private static wsc: WSControl;
-    public static init(host: string){
-        this.wsc = new  WSControl(host);
+    public static init(host: string, handler: Function){
+        this.wss = new WSControl(host, this.checkIncomingMessage.bind(this));
+        this.onIncomingMessage = handler;
     }
 
-    public static async getHostState(request: ICmdToServer):Promise<any | IErrorMessage> {
+    public static checkIncomingMessage(msg: any) {
+        let respond: any = validationJSON(msg);
+            respond = this.handledIncomingData(respond);
+        if (this.onIncomingMessage) this.onIncomingMessage(respond);
+    }
+
+    public static async sendCmdToServer(request: ICmdToServer):Promise<any | IErrorMessage> {
         try {
-            const payload = JSON.stringify(request);
-            return await this.wsc.send(payload)
-                .then (validationJSON);
+            await this.wss.send(request)
         } catch (e) {
             return ErrorMessage (`Fetch Error: ${e.message}`);
         }
     }
 
-    public static handledDataResponce(respond: any): IServiceRespond | IErrorMessage {
+    public static handledIncomingData(respond: any): IServiceRespond | IErrorMessage {
         try {
             this.handleStatusField(respond);
             this.handleErrorStatus(respond);

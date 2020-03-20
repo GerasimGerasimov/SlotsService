@@ -32,7 +32,7 @@ export default class WSControl {
                 }, 3000);
                 this.ws.onmessage = (msg: any) => {
                     clearTimeout(timeOutTimer);
-                    console.log(`onMessage: ${this.count++} ${msg.data}`);
+                    console.log(`onMessage: ${this.count++}`);// ${msg.data}`);
                     //return resolve(Array.prototype.slice.call(msg.data,0));
                     return resolve(msg.data);
                 }            
