@@ -8,10 +8,15 @@ export class LinkManager {
     private tmpSlot: ISlot = undefined;
     private TimerPullControl: any = undefined;
     private count: number = 0;
+    private sendServerHandler: Function = undefined;
 
     constructor(host: string){
         SerialController.init(host, this.checkIncomingMessage.bind(this));
         this.controlResponds();
+    }
+
+    public setServerHandler(sendServerHandler: Function) {
+        this.sendServerHandler = sendServerHandler;
     }
 
     private handleSlotSet(data: ISlotSet): ISlotSet {
@@ -119,9 +124,13 @@ export class LinkManager {
         if (this.tmpSlot) {
             this.tmpSlot.in = msg;
             console.log(this.count++, this.tmpSlot.ID);
-            //отправить клиенту подписанному на эти данные
+            this.sendRespondToServersClient(this.tmpSlot)
         }
         this.pollNextSlot();
+    }
+
+    private sendRespondToServersClient(slot: ISlot) {
+        if (this.sendServerHandler) this.sendServerHandler(slot);
     }
 
     private async pollNextSlot() {
@@ -129,9 +138,10 @@ export class LinkManager {
         const slot: Slot = this.getNextSlot();
         this.tmpSlot = slot;
         if (slot) {
-            if (this.checkSlotProperties) //пришло время запустить слот
-            await this.sendCmdToServer(slot);
-            NextPollTime = slot.Settings.TimeOut;
+            if (this.checkSlotProperties(slot)) {//пришло время запустить слот
+                await this.sendCmdToServer(slot);
+                NextPollTime = slot.Settings.TimeOut;
+            }
         }
         //я надеюсь что слот ответит раньше чем ТаймАут, но если не ответил вообще
         //то надо подтолкнуть очередь (перейти к следующему слоту)
