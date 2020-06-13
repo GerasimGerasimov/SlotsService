@@ -140,12 +140,12 @@ export class LinkManager {
         if (slot) {
             if (this.checkSlotProperties(slot)) {//пришло время запустить слот
                 await this.sendCmdToServer(slot);
-                NextPollTime = slot.Settings.TimeOut;
+                NextPollTime = slot.Settings.TimeOut * 2;
             }
         }
         //я надеюсь что слот ответит раньше чем ТаймАут, но если не ответил вообще
         //то надо подтолкнуть очередь (перейти к следующему слоту)
-        //если ждать ответа не надо (но ответ-то "" всё равно есть)
+        //если ждать ответа ненадо (но ответ-то "" всё равно есть)
         this.TimerPullControl = setTimeout(this.controlResponds.bind(this), NextPollTime);
     }
 
