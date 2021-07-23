@@ -23,13 +23,13 @@ export default class WSControl {
 
     private async waitForConnect(): Promise<string> {
         return new Promise((resolve, reject) => {
-            if (this.ws.readyState === WebSocket.OPEN) return resolve();
+            if (this.ws.readyState === WebSocket.OPEN) return resolve('socket has opened already');
             console.log('waitForConnect...');
             const Timer = setInterval( ()=>{
                 if (this.ws.readyState === WebSocket.OPEN) { 
                     clearInterval(Timer);
                     console.log('Connected!');
-                    return resolve();
+                    return resolve('socket has connected');
                 }
             }, 100);
         })
