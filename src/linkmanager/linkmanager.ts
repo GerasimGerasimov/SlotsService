@@ -24,7 +24,8 @@ export class LinkManager {
                                 cmd:[],
                                 interval: 1000,
                                 NotRespond: false,
-                                TimeOut: 1000
+                                TimeOut: 1000,
+                                ChunksEndTime: 10
                             };
         if (!data.ID)  throw new Error ('ID field is missing');
         if (!data.cmd) throw new Error ('cmd field is missing');
@@ -33,6 +34,7 @@ export class LinkManager {
         result.interval  = (typeof data.interval  !== 'undefined') ? data.interval  : 1000 ;
         result.TimeOut   = (typeof data.TimeOut   !== 'undefined') ? data.TimeOut   : 1000 ;
         result.NotRespond = (typeof data.NotRespond !== 'undefined') ? data.NotRespond : false ;
+        result.ChunksEndTime = (typeof data.ChunksEndTime  !== 'undefined') ? data.ChunksEndTime   : 10 ;
         return result;
     }
 
@@ -159,7 +161,8 @@ export class LinkManager {
             const request: ICmdToServer = {
                 cmd:slot.out,
                     timeOut: slot.Settings.TimeOut,
-                        NotRespond: slot.Settings.NotRespond
+                        NotRespond: slot.Settings.NotRespond,
+                            ChunksEndTime: slot.Settings.ChunksEndTime || 10
                         }
             await SerialController.sendCmdToServer(request);
         } catch (e) {

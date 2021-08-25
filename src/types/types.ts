@@ -17,7 +17,8 @@ export interface IServiceRespond extends IErrorMessage {
 export interface ICmdToServer {
     cmd:Array<number>,
     timeOut: Number,
-    NotRespond: boolean
+    NotRespond: boolean,
+    ChunksEndTime?:number;
 }
 
 export function validationJSON (data: any): any | IErrorMessage {
