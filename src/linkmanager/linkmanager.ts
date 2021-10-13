@@ -31,18 +31,17 @@ export class LinkManager {
         if (!data.cmd) throw new Error ('cmd field is missing');
         result.ID = data.ID;
         result.cmd = data.cmd;
-        result.interval  = data.interval  || 1000 ;
-        result.TimeOut   = data.TimeOut   || 1000 ;
+        result.interval  = (typeof data.interval !== 'undefined') ? data.interval :1000 ;
+        result.TimeOut   = (typeof data.TimeOut !== 'undefined')  ? data.TimeOut  : 1000 ;
         result.NotRespond = (typeof data.NotRespond !== 'undefined') ? data.NotRespond : false ;
-        result.ChunksEndTime = data.ChunksEndTime || 10;
+        result.ChunksEndTime = (typeof data.ChunksEndTime !== 'undefined') ? data.ChunksEndTime : 10;
         return result;
     }
 
     //добавить слот
     public addSlot (data: ISlotSet): string{
-        console.log('addSlot');
+        console.log(`Add Slot ID: ${data.ID}`);
         const SlotData: ISlotSet = this.handleSlotSet(data);
-        //this.isSlotIDExist(SlotData.ID);
         var slot: Slot;
         //TODO если слот уже существует то заменить в нём инфу без органичений
         try {
@@ -54,11 +53,17 @@ export class LinkManager {
         return slot.ID;
     }
 
+    public clearSlots(): void {
+        console.log('Clear Slots');
+        this.slots.clear();
+    }
+
     //удалить слот
     public deleteSlot(ID: string): string {
-        console.log('deleteSlot');
+        console.log(`Try to delete Slot ID: ${ID}`);
         this.getSlotByID(ID);//будет throw если слота нет
         this.slots.delete(ID);
+        console.log(`Slot ID: ${ID} id deleted`);
         return ID;
     }
 
@@ -156,7 +161,7 @@ export class LinkManager {
         this.pollNextSlot();
     }
 
-    public async sendCmdToServer(slot: ISlot): Promise<any | IErrorMessage>{      
+    public async sendCmdToServer(slot: ISlot): Promise<any | IErrorMessage>{
         try {
             const request: ICmdToServer = {
                 cmd:slot.out,

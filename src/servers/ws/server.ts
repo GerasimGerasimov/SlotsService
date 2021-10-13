@@ -17,7 +17,7 @@ export default class WSServer {
         this.init()
     }
 
-    private init () {           
+    private init () {
         this.wss = new WebSocket.Server({server: this.https});
         this.wss.on('connection', this.connectionOnWss.bind(this));
     }
@@ -42,6 +42,7 @@ export default class WSServer {
 
     private onClose(ws: WebSocket){
         console.log('Connection close');
+        this.lm.clearSlots();
         this.client = undefined;
     }
 
