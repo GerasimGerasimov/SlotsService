@@ -6,7 +6,7 @@ export interface ISlotSet {
     interval?: number //частота активации слота в милисекундах
     NotRespond: boolean;//true - команда в out не требует ответа на неё
     TimeOut: number;//время ожидания ответа устройства
-    ChunksEndTime?:number;
+    ChunksEndTime: number, // время ожидания конца пакета Frame-End-Time
 }
 
 export interface ISlot {
@@ -14,7 +14,8 @@ export interface ISlot {
     interval: number; //частота запуска слота на выполнение 
     Settings: {
         TimeOut: number,         // время ожидания ответа в милисекундах
-        NotRespond: boolean, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)        
+        NotRespond: boolean, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)
+        ChunksEndTime: number, // время ожидания конца пакета Frame-End-Time
     },
     Flow: {
         //Skip: boolean,      // true - пропустить слот (и перейти к следующему)
@@ -29,7 +30,8 @@ export class Slot implements ISlot {
     interval: number = 1000;
     Settings = {
         TimeOut: 200,         // время ожидания ответа в милисекундах
-        NotRespond: false, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)        
+        NotRespond: false, // true - команда в out не требует ответа на неё (пропускаю ожидание ответа)
+        ChunksEndTime: 10 //время по умолчанию
     };
     Flow = {
         //Skip: false,      // true - пропустить слот (и перейти к следующему)

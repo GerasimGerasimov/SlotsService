@@ -161,7 +161,8 @@ export class LinkManager {
             const request: ICmdToServer = {
                 cmd:slot.out,
                     timeOut: slot.Settings.TimeOut,
-                        NotRespond: slot.Settings.NotRespond
+                        NotRespond: slot.Settings.NotRespond,
+                            ChunksEndTime: slot.Settings.ChunksEndTime || 10
                         }
             await SerialController.sendCmdToServer(request);
         } catch (e) {
