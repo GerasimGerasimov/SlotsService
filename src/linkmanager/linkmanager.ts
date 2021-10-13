@@ -24,15 +24,17 @@ export class LinkManager {
                                 cmd:[],
                                 interval: 1000,
                                 NotRespond: false,
-                                TimeOut: 1000
+                                TimeOut: 1000,
+                                ChunksEndTime:10
                             };
         if (!data.ID)  throw new Error ('ID field is missing');
         if (!data.cmd) throw new Error ('cmd field is missing');
         result.ID = data.ID;
         result.cmd = data.cmd;
-        result.interval  = (typeof data.interval  !== 'undefined') ? data.interval  : 1000 ;
-        result.TimeOut   = (typeof data.TimeOut   !== 'undefined') ? data.TimeOut   : 1000 ;
+        result.interval  = data.interval  || 1000 ;
+        result.TimeOut   = data.TimeOut   || 1000 ;
         result.NotRespond = (typeof data.NotRespond !== 'undefined') ? data.NotRespond : false ;
+        result.ChunksEndTime = data.ChunksEndTime || 10;
         return result;
     }
 

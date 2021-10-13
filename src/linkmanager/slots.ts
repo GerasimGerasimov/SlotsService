@@ -6,6 +6,7 @@ export interface ISlotSet {
     interval?: number //частота активации слота в милисекундах
     NotRespond: boolean;//true - команда в out не требует ответа на неё
     TimeOut: number;//время ожидания ответа устройства
+    ChunksEndTime?:number;
 }
 
 export interface ISlot {

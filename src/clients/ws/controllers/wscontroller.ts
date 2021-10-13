@@ -23,13 +23,13 @@ export default class WSControl {
 
     private async waitForConnect(): Promise<string> {
         return new Promise((resolve, reject) => {
-            if (this.ws.readyState === WebSocket.OPEN) return resolve();
+            if (this.ws.readyState === WebSocket.OPEN) return resolve('Connected!');
             console.log('waitForConnect...');
             const Timer = setInterval( ()=>{
                 if (this.ws.readyState === WebSocket.OPEN) { 
                     clearInterval(Timer);
                     console.log('Connected!');
-                    return resolve();
+                    return resolve('Connected!');
                 }
             }, 100);
         })
@@ -77,10 +77,11 @@ export default class WSControl {
 
     private onClose(event: any) {
         console.log(`Closed connection to ${this.host}`);
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+            clearTimeout(timer);
             console.log(`Try connect to ${this.host}`);
             this.initSocket();
-        }, 1000);        
+        }, 3000);
     }
 
     private onMessage(msg: any) {
